@@ -1,4 +1,4 @@
-import { CreateMessage, PostToUi } from "../common/CreateMessage";
+import { CreateMessage, PostToUi } from "@ common/messages";
 
 
 figma.showUI(__html__);

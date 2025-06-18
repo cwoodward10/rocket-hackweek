@@ -1,6 +1,4 @@
-import { PLUGIN, UI } from "@common/networkSides";
-import { UI_CHANNEL } from "@ui/app.network";
-import { Networker } from "monorepo-networker";
+import { ListenToFigma } from "@common/messages";
 import React from "react";
 import ReactDOM from "react-dom/client";
 
@@ -10,10 +8,12 @@ async function bootstrap() {
   UI_CHANNEL.emit(PLUGIN, "hello", ["Hey there, Figma!"]);
 
   const App = (await import("./app")).default;
-
+  
   const rootElement = document.getElementById("root") as HTMLElement;
   const root = ReactDOM.createRoot(rootElement);
-
+  
+  onmessage = (e: MessageEvent) => ListenToFigma(e);
+  
   root.render(
     <React.StrictMode>
       <App />
