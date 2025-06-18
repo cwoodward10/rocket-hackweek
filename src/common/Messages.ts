@@ -1,14 +1,4 @@
-
-/**
- * Posts a message to Figma using the 'parent.postMessage' function.
- * Documentation here: https://www.figma.com/plugin-docs/creating-ui#sending-a-message-from-the-ui-to-the-plugin-code
- * @param message 
- * @param origin 
- */
-export function SendToFigma(message: any, origin = '*') {
-    parent.postMessage({ pluginMessage: message}, origin);
-}
-
+//# INFRA
 /**
  * Used with the Message Registry to listen for messages from the Figma Plugin code.
  */
@@ -20,12 +10,16 @@ type FigmaListener = {
 }
 
 /**
+ * Singleton for acting on messages
+ */
+const FigmaListenerRegistry: FigmaListener[] = [];
+
+/**
  * A collection of messages (and their associated callback functions) for
  * the app to check through when the Figma plugin code sends a message
  * to the UI.
  */
-let FigmaListenerRegistry: FigmaListener[] = [];
-export function ListenToFigma(e: MessageEvent) {
+function ListenToFigma(e: MessageEvent) {
     const pluginMessage: {message: string, data: any} = e.data.pluginMessage;
 
     const listener = FigmaListenerRegistry.find(l => l.Name === pluginMessage.message);
@@ -41,6 +35,43 @@ export function ListenToFigma(e: MessageEvent) {
             FigmaListenerRegistry = FigmaListenerRegistry.filter(l => l.Name != listener.Name);
         }
     }
+}
+
+/**
+ * Used by the On and Once functions to register a listener.
+ */
+function registerListener(
+    message: string,
+    type: 'Once' | 'Infinite',
+    callback: (name: string, data: any) => void
+) {
+    FigmaListenerRegistry.push({
+        Name: message,
+        Type: type,
+        Active: true,
+        Callback: callback
+    });
+}
+//#endregion INFRA
+
+//#region MESSAGE UTITLITIES
+/**
+ * Sends a message to the Plugin Controller.
+ * @param message 
+ * @param data 
+ */
+export function PostToUi<T>(message: string, data?: T = undefined) {
+    figma.ui.postMessage({message, data});
+}
+
+/**
+ * Posts a message to Figma using the 'parent.postMessage' function.
+ * Documentation here: https://www.figma.com/plugin-docs/creating-ui#sending-a-message-from-the-ui-to-the-plugin-code
+ * @param message 
+ * @param origin - should not need to be changed
+ */
+export function SendToFigma(message: any, origin = '*') {
+    parent.postMessage({ pluginMessage: message}, origin);
 }
 
 /**
@@ -67,24 +98,4 @@ export function Once(message: string, callback: (name: string, data: any) => voi
 
     registerListener(message, 'Once', callback);
 }
-
-function registerListener(
-    message: string,
-    type: 'Once' | 'Infinite',
-    callback: (name: string, data: any) => void
-) {
-    FigmaListenerRegistry.push({
-        Name: message,
-        Type: type,
-        Active: true,
-        Callback: callback
-    });
-}
-
-export function PostToUi(message: string, data: any = undefined) {
-    figma.ui.postMessage({message, data});
-}
-
-export function CreateMessage(say: string) {
-    return `This is a test message: ${say}.`;
-}
+//#endregion MESSAGE UTITLITIES

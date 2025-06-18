@@ -8,11 +8,6 @@ figma.on('selectionchange', () => {
 })
 
 figma.ui.on("message", (msg) => {
-  if (msg === "Hello") {
-    let message = CreateMessage(msg);
-    figma.notify(message);
-    PostToUi('HelloBack');
-  }
   if (msg === "close") {
     figma.closePlugin();
   }
