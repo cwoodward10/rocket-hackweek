@@ -1,4 +1,5 @@
 import { SendToUi } from "@common/Messages";
+import { HandleSumbit } from "./handlers/submit";
 
 figma.showUI(__html__);
 
