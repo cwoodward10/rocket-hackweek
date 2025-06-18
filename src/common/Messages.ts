@@ -68,7 +68,7 @@ function registerListener(
  * @param message 
  * @param data 
  */
-export function SendToUI(message: string, data?: any = undefined) {
+export function SendToUi(message: string, data: any = undefined) {
     figma.ui.postMessage({message, data});
 }
 
