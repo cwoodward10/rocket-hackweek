@@ -1,5 +1,13 @@
 //# INFRA
 /**
+ * 
+ */
+type PluginMessage = {
+    message: string;
+    data: any;
+}
+
+/**
  * Used with the Message Registry to listen for messages from the Figma Plugin code.
  */
 type FigmaListener = {
@@ -12,7 +20,7 @@ type FigmaListener = {
 /**
  * Singleton for acting on messages
  */
-const FigmaListenerRegistry: FigmaListener[] = [];
+let FigmaListenerRegistry: FigmaListener[] = [];
 
 /**
  * A collection of messages (and their associated callback functions) for
@@ -20,7 +28,7 @@ const FigmaListenerRegistry: FigmaListener[] = [];
  * to the UI.
  */
 function ListenToFigma(e: MessageEvent) {
-    const pluginMessage: {message: string, data: any} = e.data.pluginMessage;
+    const pluginMessage: PluginMessage = e.data.pluginMessage;
 
     const listener = FigmaListenerRegistry.find(l => l.Name === pluginMessage.message);
     if (listener == null) {
@@ -60,7 +68,7 @@ function registerListener(
  * @param message 
  * @param data 
  */
-export function PostToUi<T>(message: string, data?: T = undefined) {
+export function SendToUI(message: string, data?: any = undefined) {
     figma.ui.postMessage({message, data});
 }
 
@@ -70,7 +78,7 @@ export function PostToUi<T>(message: string, data?: T = undefined) {
  * @param message 
  * @param origin - should not need to be changed
  */
-export function SendToFigma(message: any, origin = '*') {
+export function SendToFigma(message: PluginMessage, origin = '*') {
     parent.postMessage({ pluginMessage: message}, origin);
 }
 
