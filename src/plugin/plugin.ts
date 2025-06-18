@@ -1,5 +1,5 @@
 import { type PluginMessage, SendToUi } from "@ common/messages";
-
+import { HandleSumbit } from "./handlers/submit";
 
 figma.showUI(__html__);
 
@@ -14,6 +14,8 @@ figma.ui.on("message", (msg: ) => {
   }
 
   switch (msg.message) {
-    case ""
+    case "submit": 
+      HandleSumbit(msg.data);
+      break;
   }
 });
