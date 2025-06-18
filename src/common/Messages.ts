@@ -12,7 +12,7 @@ type FigmaListener = {
 /**
  * Singleton for acting on messages
  */
-const FigmaListenerRegistry: FigmaListener[] = [];
+let FigmaListenerRegistry: FigmaListener[] = [];
 
 /**
  * A collection of messages (and their associated callback functions) for
@@ -60,7 +60,7 @@ function registerListener(
  * @param message 
  * @param data 
  */
-export function PostToUi<T>(message: string, data?: T = undefined) {
+export function SendToUi(message: string, data: any = undefined) {
     figma.ui.postMessage({message, data});
 }
 

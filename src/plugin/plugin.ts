@@ -1,10 +1,9 @@
-import { CreateMessage, PostToUi } from "@ common/messages";
-
+import { SendToUi } from "@common/Messages";
 
 figma.showUI(__html__);
 
 figma.on('selectionchange', () => {
-  PostToUi('SelectionChanged', figma.currentPage.selection);
+  SendToUi('SelectionChanged', figma.currentPage.selection);
 })
 
 figma.ui.on("message", (msg) => {
