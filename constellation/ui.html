@@ -1,295 +1,306 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf-8">
-  <title>Constellation</title>
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-    
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      font-size: 12px;
-      margin: 0;
-      padding: 16px;
-      background: #ffffff;
-      color: #333;
-      overflow-y: auto;
-    }
-    
-    .header {
-      display: flex;
-      align-items: center;
-      margin-bottom: 16px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid #e5e5e5;
-    }
-    
-    .constellation-icon {
-      width: 20px;
-      height: 20px;
-      margin-right: 8px;
-      background: linear-gradient(45deg, #0066cc, #4d94ff);
-      border-radius: 4px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: bold;
-      font-size: 10px;
-    }
-    
-    .title {
-      font-weight: 600;
-      font-size: 14px;
-      color: #333;
-    }
-    
-    .content {
-      min-height: 100px;
-    }
-    
-    .frame-info {
-      background: #f8f9fa;
-      border: 1px solid #e9ecef;
-      border-radius: 6px;
-      padding: 12px;
-      margin-bottom: 12px;
-    }
-    
-    .frame-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-    }
-    
-    .frame-name {
-      font-weight: 500;
-      color: #333;
-      flex: 1;
-    }
-    
-    .frame-dimensions {
-      font-size: 11px;
-      color: #666;
-      background: #e9ecef;
-      padding: 2px 6px;
-      border-radius: 3px;
-    }
-    
-    .screenshot-container {
-      margin-bottom: 12px;
-      border-radius: 4px;
-      overflow: hidden;
-      background: #f0f0f0;
-      position: relative;
-    }
-    
-    .screenshot {
-      width: 100%;
-      height: auto;
-      max-height: 200px;
-      object-fit: contain;
-      display: block;
-      background: white;
-    }
-    
-    .screenshot-placeholder {
-      width: 100%;
-      height: 120px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #666;
-      font-style: italic;
-      background: #f8f9fa;
-      border: 2px dashed #dee2e6;
-    }
-    
-    .loading-spinner {
-      width: 20px;
-      height: 20px;
-      border: 2px solid #e9ecef;
-      border-top: 2px solid #0066cc;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin-right: 8px;
-    }
-    
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    
-    .loading-container {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      color: #666;
-    }
-    
-    .screenshot-actions {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-    
-    .refresh-btn {
-      padding: 4px 8px;
-      background: #6c757d;
-      color: white;
-      border: none;
-      border-radius: 3px;
-      cursor: pointer;
-      font-size: 10px;
-      font-weight: 500;
-      transition: background 0.2s;
-    }
-    
-    .refresh-btn:hover {
-      background: #5a6268;
-    }
-    
-    .url-container {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    
-    .url-input {
-      flex: 1;
-      padding: 6px 8px;
-      border: 1px solid #d1d5db;
-      border-radius: 4px;
-      font-size: 11px;
-      font-family: 'Monaco', 'Menlo', monospace;
-      background: white;
-      color: #666;
-    }
-    
-    .copy-btn {
-      padding: 6px 12px;
-      background: #0066cc;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 11px;
-      font-weight: 500;
-      transition: background 0.2s;
-    }
-    
-    .copy-btn:hover {
-      background: #0052a3;
-    }
-    
-    .copy-btn:active {
-      background: #003d7a;
-    }
-    
-    .copy-btn.copied {
-      background: #28a745;
-    }
-    
-    .message {
-      text-align: center;
-      color: #666;
-      padding: 20px;
-    }
-    
-    .multiple-frames-note {
-      font-size: 11px;
-      color: #666;
-      margin-top: 8px;
-      font-style: italic;
-    }
-    
-    .close-btn {
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      background: none;
-      border: none;
-      color: #999;
-      cursor: pointer;
-      font-size: 16px;
-      padding: 4px;
-      border-radius: 2px;
-    }
-    
-    .close-btn:hover {
-      background: #f0f0f0;
-      color: #666;
-    }
-    
-    .error-message {
-      color: #dc3545;
-      font-size: 11px;
-      margin-top: 4px;
-      font-style: italic;
-    }
-  </style>
-</head>
-<body>
-  
-  <div class="content" id="content">
-    <div class="message" id="message">
-      Select a frame to find similar designs
-    </div>
-  </div>
-
-  <script>
-    let currentUrl = null;
-    let currentScreenshot = null;
-    
-    // Handle messages from the plugin code
-    window.onmessage = (event) => {
-      const msg = event.data.pluginMessage;
-      
-      if (msg.type === 'selection-changed') {
-        updateUI(msg);
-      } else if (msg.type === 'loading') {
-        showLoading(msg.message);
+  <head>
+    <meta charset="utf-8" />
+    <title>Constellation</title>
+    <style>
+      * {
+        box-sizing: border-box;
       }
-    };
-    
-    function showLoading(message) {
-      const content = document.getElementById('content');
-      content.innerHTML = `
+
+      body {
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+        font-size: 12px;
+        margin: 0;
+        padding: 16px;
+        background: #ffffff;
+        color: #333;
+        overflow-y: auto;
+      }
+
+      .header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #e5e5e5;
+      }
+
+      .constellation-icon {
+        width: 20px;
+        height: 20px;
+        margin-right: 8px;
+        background: linear-gradient(45deg, #0066cc, #4d94ff);
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 10px;
+      }
+
+      .title {
+        font-weight: 600;
+        font-size: 14px;
+        color: #333;
+      }
+
+      .content {
+        min-height: 100px;
+      }
+
+      .frame-info {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 6px;
+        padding: 12px;
+        margin-bottom: 12px;
+      }
+
+      .frame-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+
+      .frame-name {
+        font-weight: 500;
+        color: #333;
+        flex: 1;
+      }
+
+      .frame-dimensions {
+        font-size: 11px;
+        color: #666;
+        background: #e9ecef;
+        padding: 2px 6px;
+        border-radius: 3px;
+      }
+
+      .screenshot-container {
+        margin-bottom: 12px;
+        border-radius: 4px;
+        overflow: hidden;
+        background: #f0f0f0;
+        position: relative;
+      }
+
+      .screenshot {
+        width: 100%;
+        height: auto;
+        max-height: 200px;
+        object-fit: contain;
+        display: block;
+        background: white;
+      }
+
+      .screenshot-placeholder {
+        width: 100%;
+        height: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #666;
+        font-style: italic;
+        background: #f8f9fa;
+        border: 2px dashed #dee2e6;
+      }
+
+      .loading-spinner {
+        width: 20px;
+        height: 20px;
+        border: 2px solid #e9ecef;
+        border-top: 2px solid #0066cc;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-right: 8px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .loading-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        color: #666;
+      }
+
+      .screenshot-actions {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .refresh-btn {
+        padding: 4px 8px;
+        background: #6c757d;
+        color: white;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 10px;
+        font-weight: 500;
+        transition: background 0.2s;
+      }
+
+      .refresh-btn:hover {
+        background: #5a6268;
+      }
+
+      .url-container {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .url-input {
+        flex: 1;
+        padding: 6px 8px;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        font-size: 11px;
+        font-family: "Monaco", "Menlo", monospace;
+        background: white;
+        color: #666;
+      }
+
+      .copy-btn {
+        padding: 6px 12px;
+        background: #0066cc;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 11px;
+        font-weight: 500;
+        transition: background 0.2s;
+      }
+
+      .copy-btn:hover {
+        background: #0052a3;
+      }
+
+      .copy-btn:active {
+        background: #003d7a;
+      }
+
+      .copy-btn.copied {
+        background: #28a745;
+      }
+
+      .message {
+        text-align: center;
+        color: #666;
+        padding: 20px;
+      }
+
+      .multiple-frames-note {
+        font-size: 11px;
+        color: #666;
+        margin-top: 8px;
+        font-style: italic;
+      }
+
+      .close-btn {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background: none;
+        border: none;
+        color: #999;
+        cursor: pointer;
+        font-size: 16px;
+        padding: 4px;
+        border-radius: 2px;
+      }
+
+      .close-btn:hover {
+        background: #f0f0f0;
+        color: #666;
+      }
+
+      .error-message {
+        color: #dc3545;
+        font-size: 11px;
+        margin-top: 4px;
+        font-style: italic;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="content" id="content">
+      <div class="message" id="message">
+        Select a frame to find similar designs
+      </div>
+    </div>
+
+    <script>
+      let currentUrl = null;
+      let currentScreenshot = null;
+
+      // Handle messages from the plugin code
+      window.onmessage = (event) => {
+        const msg = event.data.pluginMessage;
+
+        if (msg.type === "selection-changed") {
+          updateUI(msg);
+        } else if (msg.type === "loading") {
+          showLoading(msg.message);
+        }
+      };
+
+      function showLoading(message) {
+        const content = document.getElementById("content");
+        content.innerHTML = `
         <div class="loading-container">
           <div class="loading-spinner"></div>
           <span>${message}</span>
         </div>
       `;
-    }
-    
-    function updateUI(data) {
-      const content = document.getElementById('content');
-      
-      if (!data.frameUrl) {
-        content.innerHTML = `<div class="message">${data.message}</div>`;
-        currentUrl = null;
-        currentScreenshot = null;
-        return;
       }
-      
-      currentUrl = data.frameUrl;
-      currentScreenshot = data.screenshot;
-      
-      const screenshotHtml = data.screenshot 
-        ? `<img src="${data.screenshot}" alt="Frame screenshot" class="screenshot" id="screenshot">`
-        : `<div class="screenshot-placeholder">
-             ${data.screenshot === null ? 'Screenshot failed to load' : 'Loading screenshot...'}
+
+      function updateUI(data) {
+        const content = document.getElementById("content");
+
+        if (!data.frameUrl) {
+          content.innerHTML = `<div class="message">${data.message}</div>`;
+          currentUrl = null;
+          currentScreenshot = null;
+          return;
+        }
+
+        currentUrl = data.frameUrl;
+        currentScreenshot = data.screenshot;
+
+        const screenshotHtml = data.screenshot
+          ? `<img src="${data.screenshot}" alt="Frame screenshot" class="screenshot" id="screenshot">`
+          : `<div class="screenshot-placeholder">
+             ${
+               data.screenshot === null
+                 ? "Screenshot failed to load"
+                 : "Loading screenshot..."
+             }
            </div>`;
-      
-      const dimensionsHtml = data.frameWidth && data.frameHeight 
-        ? `<div class="frame-dimensions">${Math.round(data.frameWidth)} × ${Math.round(data.frameHeight)}</div>`
-        : '';
-      
-      content.innerHTML = `
+
+        const dimensionsHtml =
+          data.frameWidth && data.frameHeight
+            ? `<div class="frame-dimensions">${Math.round(
+                data.frameWidth
+              )} × ${Math.round(data.frameHeight)}</div>`
+            : "";
+
+        content.innerHTML = `
         <div class="frame-info">
           <div class="frame-header">
             <div class="frame-name">${data.frameName}</div>
@@ -305,85 +316,102 @@
           </div>
           
           <div class="url-container">
-            <input type="text" class="url-input" value="${data.frameUrl}" readonly id="urlInput">
+            <input type="text" class="url-input" value="${
+              data.frameUrl
+            }" readonly id="urlInput">
             <button class="copy-btn" id="copyBtn">Copy URL</button>
           </div>
           
-          ${data.message ? `<div class="multiple-frames-note">${data.message}</div>` : ''}
-          ${data.screenshot === null ? `<div class="error-message">Failed to capture screenshot</div>` : ''}
+          ${
+            data.message
+              ? `<div class="multiple-frames-note">${data.message}</div>`
+              : ""
+          }
+          ${
+            data.screenshot === null
+              ? `<div class="error-message">Failed to capture screenshot</div>`
+              : ""
+          }
         </div>
       `;
-      
-      setupEventListeners();
-    }
-    
-    function setupEventListeners() {
-      // Copy button functionality
-      const copyBtn = document.getElementById('copyBtn');
-      const urlInput = document.getElementById('urlInput');
-      
-      if (copyBtn && urlInput) {
-        copyBtn.addEventListener('click', () => {
-          urlInput.select();
-          document.execCommand('copy');
-          
-          copyBtn.textContent = 'Copied!';
-          copyBtn.classList.add('copied');
-          
-          setTimeout(() => {
-            copyBtn.textContent = 'Copy URL';
-            copyBtn.classList.remove('copied');
-          }, 1500);
-        });
-        
-        // Select URL on click
-        urlInput.addEventListener('click', () => {
-          urlInput.select();
-        });
+
+        setupEventListeners();
       }
-      
-      // Refresh screenshot button
-      const refreshBtn = document.getElementById('refreshBtn');
-      if (refreshBtn) {
-        refreshBtn.addEventListener('click', () => {
-          parent.postMessage({ pluginMessage: { type: 'refresh-screenshot' } }, '*');
-        });
-      }
-      
-      // Screenshot click to view full size (if needed)
-      const screenshot = document.getElementById('screenshot');
-      if (screenshot) {
-        screenshot.addEventListener('click', () => {
-          // Could implement full-size view or copy screenshot functionality
-          screenshot.style.maxHeight = screenshot.style.maxHeight === 'none' ? '200px' : 'none';
-        });
-      }
-    }
-    
-    // Close button functionality
-    document.getElementById('closeBtn').addEventListener('click', () => {
-      parent.postMessage({ pluginMessage: { type: 'close-plugin' } }, '*');
-    });
-    
-    // Keyboard shortcuts
-    document.addEventListener('keydown', (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'c' && currentUrl) {
-        const urlInput = document.getElementById('urlInput');
-        if (urlInput) {
-          urlInput.select();
-          document.execCommand('copy');
+
+      function setupEventListeners() {
+        // Copy button functionality
+        const copyBtn = document.getElementById("copyBtn");
+        const urlInput = document.getElementById("urlInput");
+
+        if (copyBtn && urlInput) {
+          copyBtn.addEventListener("click", () => {
+            urlInput.select();
+            document.execCommand("copy");
+
+            copyBtn.textContent = "Copied!";
+            copyBtn.classList.add("copied");
+
+            setTimeout(() => {
+              copyBtn.textContent = "Copy URL";
+              copyBtn.classList.remove("copied");
+            }, 1500);
+          });
+
+          // Select URL on click
+          urlInput.addEventListener("click", () => {
+            urlInput.select();
+          });
+        }
+
+        // Refresh screenshot button
+        const refreshBtn = document.getElementById("refreshBtn");
+        if (refreshBtn) {
+          refreshBtn.addEventListener("click", () => {
+            parent.postMessage(
+              { pluginMessage: { type: "refresh-screenshot" } },
+              "*"
+            );
+          });
+        }
+
+        // Screenshot click to view full size (if needed)
+        const screenshot = document.getElementById("screenshot");
+        if (screenshot) {
+          screenshot.addEventListener("click", () => {
+            // Could implement full-size view or copy screenshot functionality
+            screenshot.style.maxHeight =
+              screenshot.style.maxHeight === "none" ? "200px" : "none";
+          });
         }
       }
-      
-      if (e.key === 'Escape') {
-        parent.postMessage({ pluginMessage: { type: 'close-plugin' } }, '*');
-      }
-      
-      if (e.key === 'F5' || ((e.ctrlKey || e.metaKey) && e.key === 'r')) {
-        e.preventDefault();
-        parent.postMessage({ pluginMessage: { type: 'refresh-screenshot' } }, '*');
-      }
-    });
-  </script>
-</body>
+
+      // Close button functionality
+      document.getElementById("closeBtn").addEventListener("click", () => {
+        parent.postMessage({ pluginMessage: { type: "close-plugin" } }, "*");
+      });
+
+      // Keyboard shortcuts
+      document.addEventListener("keydown", (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === "c" && currentUrl) {
+          const urlInput = document.getElementById("urlInput");
+          if (urlInput) {
+            urlInput.select();
+            document.execCommand("copy");
+          }
+        }
+
+        if (e.key === "Escape") {
+          parent.postMessage({ pluginMessage: { type: "close-plugin" } }, "*");
+        }
+
+        if (e.key === "F5" || ((e.ctrlKey || e.metaKey) && e.key === "r")) {
+          e.preventDefault();
+          parent.postMessage(
+            { pluginMessage: { type: "refresh-screenshot" } },
+            "*"
+          );
+        }
+      });
+    </script>
+  </body>
 </html>
